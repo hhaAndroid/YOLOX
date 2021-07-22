@@ -28,7 +28,12 @@ class Exp(BaseExp):
         # self.data_num_workers = 0
         self.input_size = (640, 640)
         self.random_size = (14, 26)
-        self.train_ann = "instances_train2017.json"
+
+        # self.train_ann = "instances_train2017.json"
+        # self.name = 'train2017'
+        self.train_ann = "instances_val2017.json"
+        self.name = 'val2017'
+
         self.val_ann = "instances_val2017.json"
         self.data_dir = '/mnt/data1/huanghaian/coco'
 
@@ -94,6 +99,7 @@ class Exp(BaseExp):
         dataset = COCODataset(
             data_dir=self.data_dir,
             json_file=self.train_ann,
+            name=self.name,
             img_size=self.input_size,
             preproc=TrainTransform(
                 rgb_means=(0.485, 0.456, 0.406),
