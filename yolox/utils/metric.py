@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (c) 2014-2021 Megvii Inc. All rights reserved.
+import numpy as np
+
+import torch
+
 import functools
 import os
 import time
 from collections import defaultdict, deque
 
-import numpy as np
-
-import torch
-
 __all__ = [
     "AverageMeter",
     "MeterBuffer",
     "get_total_and_free_memory_in_Mb",
-    "occumpy_mem",
+    "occupy_mem",
     "gpu_mem_usage",
 ]
 
@@ -28,7 +28,7 @@ def get_total_and_free_memory_in_Mb(cuda_device):
     return int(total), int(used)
 
 
-def occumpy_mem(cuda_device, mem_ratio=0.9):
+def occupy_mem(cuda_device, mem_ratio=0.9):
     """
     pre-allocate gpu memory for training to avoid memory Fragmentation.
     """
@@ -114,6 +114,8 @@ class MeterBuffer(defaultdict):
             values = {}
         values.update(kwargs)
         for k, v in values.items():
+            if isinstance(v, torch.Tensor):
+                v = v.detach()
             self[k].update(v)
 
     def clear_meters(self):
