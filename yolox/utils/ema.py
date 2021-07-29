@@ -10,12 +10,12 @@ from copy import deepcopy
 
 def is_parallel(model):
     """check if model is in parallel mode."""
-    import apex
+    #import apex
 
     parallel_type = (
         nn.parallel.DataParallel,
         nn.parallel.DistributedDataParallel,
-        apex.parallel.distributed.DistributedDataParallel,
+        #apex.parallel.distributed.DistributedDataParallel,
     )
     return isinstance(model, parallel_type)
 
