@@ -4,10 +4,10 @@
 
 from loguru import logger
 
-import apex
+# import apex
 import torch
-from apex import amp
-from torch.utils.tensorboard import SummaryWriter
+# from apex import amp
+# from torch.utils.tensorboard import SummaryWriter
 
 from yolox.data import DataPrefetcher
 from yolox.utils import (
@@ -104,11 +104,7 @@ class Trainer:
         loss = outputs["total_loss"]
 
         self.optimizer.zero_grad()
-        if self.amp_training:
-            with amp.scale_loss(loss, self.optimizer) as scaled_loss:
-                scaled_loss.backward()
-        else:
-            loss.backward()
+        loss.backward()
         self.optimizer.step()
 
         if self.use_model_ema:
@@ -141,9 +137,6 @@ class Trainer:
         # solver related init
         self.optimizer = self.exp.get_optimizer(self.args.batch_size)
 
-        if self.amp_training:
-            model, optimizer = amp.initialize(model, self.optimizer, opt_level="O1")
-
         # value of epoch will be set in `resume_train`
         model = self.resume_train(model)
 
@@ -166,9 +159,8 @@ class Trainer:
             occupy_mem(self.local_rank)
 
         if self.is_distributed:
-            model = apex.parallel.DistributedDataParallel(model)
-            # from torch.nn.parallel import DistributedDataParallel as DDP
-            # model = DDP(model, device_ids=[self.local_rank], broadcast_buffers=False)
+            from torch.nn.parallel import DistributedDataParallel as DDP
+            model = DDP(model, device_ids=[self.local_rank], broadcast_buffers=False)
 
         if self.use_model_ema:
             self.ema_model = ModelEMA(model, 0.9998)
@@ -181,8 +173,8 @@ class Trainer:
             batch_size=self.args.batch_size, is_distributed=self.is_distributed
         )
         # Tensorboard logger
-        if self.rank == 0:
-            self.tblogger = SummaryWriter(self.file_name)
+        # if self.rank == 0:
+        #     self.tblogger = SummaryWriter(self.file_name)
 
         logger.info("Training start...")
         logger.info("\n{}".format(model))
@@ -283,8 +275,6 @@ class Trainer:
             model.load_state_dict(ckpt["model"])
             self.optimizer.load_state_dict(ckpt["optimizer"])
             # resume the training states variables
-            if self.amp_training and "amp" in ckpt:
-                amp.load_state_dict(ckpt["amp"])
             start_epoch = (
                 self.args.start_epoch - 1
                 if self.args.start_epoch is not None
@@ -312,10 +302,6 @@ class Trainer:
             evalmodel, self.evaluator, self.is_distributed
         )
         self.model.train()
-        if self.rank == 0:
-            self.tblogger.add_scalar("val/COCOAP50", ap50, self.epoch + 1)
-            self.tblogger.add_scalar("val/COCOAP50_95", ap50_95, self.epoch + 1)
-            logger.info("\n" + summary)
         synchronize()
 
         self.save_ckpt("last_epoch", ap50_95 > self.best_ap)
@@ -330,10 +316,6 @@ class Trainer:
                 "model": save_model.state_dict(),
                 "optimizer": self.optimizer.state_dict(),
             }
-            if self.amp_training:
-                # save amp state according to
-                # https://nvidia.github.io/apex/amp.html#checkpointing
-                ckpt_state["amp"] = amp.state_dict()
             save_checkpoint(
                 ckpt_state,
                 update_best_ckpt,
