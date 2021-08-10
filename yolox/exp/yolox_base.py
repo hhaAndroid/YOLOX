@@ -27,7 +27,7 @@ class Exp(BaseExp):
         self.data_num_workers = 2
         self.input_size = (640, 640)
         self.random_size = (14, 26)
-        self.data_dir = 'mnt/lustre/huanghaian/dataset/coco'
+        self.data_dir = '/mnt/lustre/huanghaian/dataset/coco'
         self.train_ann = "instances_train2017.json"
         self.name = 'train2017'
         self.val_ann = "instances_val2017.json"
