@@ -310,10 +310,8 @@ class Trainer:
             evalmodel, self.evaluator, self.is_distributed
         )
         self.model.train()
-        # if self.rank == 0:
-        #     self.tblogger.add_scalar("val/COCOAP50", ap50, self.epoch + 1)
-        #     self.tblogger.add_scalar("val/COCOAP50_95", ap50_95, self.epoch + 1)
-        #     logger.info("\n" + summary)
+        if self.rank == 0:
+            logger.info("\n" + summary)
         synchronize()
 
         self.save_ckpt("last_epoch", ap50_95 > self.best_ap)
