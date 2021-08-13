@@ -49,7 +49,7 @@ class Exp(BaseExp):
         self.scheduler = "yoloxwarmcos"
         self.no_aug_epochs = 15
         self.min_lr_ratio = 0.05
-        self.ema = True
+        self.ema = False
 
         self.weight_decay = 5e-4
         self.momentum = 0.9
