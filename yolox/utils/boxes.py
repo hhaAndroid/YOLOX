@@ -60,12 +60,16 @@ def postprocess(prediction, num_classes, conf_thre=0.7, nms_thre=0.45, class_agn
                 nms_thre,
             )
         else:
-            nms_out_index = torchvision.ops.batched_nms(
-                detections[:, :4],
-                detections[:, 4] * detections[:, 5],
-                detections[:, 6],
-                nms_thre,
-            )
+            from mmcv.ops import batched_nms
+            _, nms_out_index = batched_nms(detections[:, :4], detections[:, 4] * detections[:, 5], detections[:, 6],
+                                           dict(iou_threshold=nms_thre))
+
+            # nms_out_index = torchvision.ops.batched_nms(
+            #     detections[:, :4],
+            #     detections[:, 4] * detections[:, 5],
+            #     detections[:, 6],
+            #     nms_thre,
+            # )
 
         detections = detections[nms_out_index]
         if output[i] is None:
