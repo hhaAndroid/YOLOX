@@ -9,7 +9,7 @@ from loguru import logger
 
 import torch
 from torch.nn.parallel import DistributedDataParallel as DDP
-from torch.utils.tensorboard import SummaryWriter
+# from torch.utils.tensorboard import SummaryWriter
 
 from yolox.data import DataPrefetcher
 from yolox.utils import (
@@ -40,7 +40,7 @@ class Trainer:
         # training related attr
         self.max_epoch = exp.max_epoch
         self.amp_training = args.fp16
-        self.scaler = torch.cuda.amp.GradScaler(enabled=args.fp16)
+        # self.scaler = torch.cuda.amp.GradScaler(enabled=args.fp16)
         self.is_distributed = get_world_size() > 1
         self.rank = get_rank()
         self.local_rank = get_local_rank()
@@ -97,15 +97,18 @@ class Trainer:
         inps, targets = self.exp.preprocess(inps, targets, self.input_size)
         data_end_time = time.time()
 
-        with torch.cuda.amp.autocast(enabled=self.amp_training):
-            outputs = self.model(inps, targets)
+        # with torch.cuda.amp.autocast(enabled=self.amp_training):
+        outputs = self.model(inps, targets)
 
         loss = outputs["total_loss"]
 
         self.optimizer.zero_grad()
-        self.scaler.scale(loss).backward()
-        self.scaler.step(self.optimizer)
-        self.scaler.update()
+        loss.backward()
+        self.optimizer.step()
+
+        # self.scaler.scale(loss).backward()
+        # self.scaler.step(self.optimizer)
+        # self.scaler.update()
 
         if self.use_model_ema:
             self.ema_model.update(self.model)
@@ -173,8 +176,8 @@ class Trainer:
             batch_size=self.args.batch_size, is_distributed=self.is_distributed
         )
         # Tensorboard logger
-        if self.rank == 0:
-            self.tblogger = SummaryWriter(self.file_name)
+        # if self.rank == 0:
+        #     self.tblogger = SummaryWriter(self.file_name)
 
         logger.info("Training start...")
         logger.info("\n{}".format(model))
@@ -304,8 +307,8 @@ class Trainer:
         )
         self.model.train()
         if self.rank == 0:
-            self.tblogger.add_scalar("val/COCOAP50", ap50, self.epoch + 1)
-            self.tblogger.add_scalar("val/COCOAP50_95", ap50_95, self.epoch + 1)
+            # self.tblogger.add_scalar("val/COCOAP50", ap50, self.epoch + 1)
+            # self.tblogger.add_scalar("val/COCOAP50_95", ap50_95, self.epoch + 1)
             logger.info("\n" + summary)
         synchronize()
 
