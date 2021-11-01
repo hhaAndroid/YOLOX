@@ -59,8 +59,7 @@ class COCODataset(Dataset):
         file_client_args = dict(
             backend='petrel',
             path_mapping=dict({
-                './datasets/': 's3://openmmlab/datasets/detection/',
-                'datasets/': 's3://openmmlab/datasets/detection/'
+                self.data_dir: 's3://openmmlab/datasets/detection/coco'
             }))
         self.file_client = mmcv.FileClient(**file_client_args)
 
@@ -178,7 +177,6 @@ class COCODataset(Dataset):
         file_name = self.annotations[index][3]
 
         img_file = os.path.join(self.data_dir, self.name, file_name)
-
         img_bytes = self.file_client.get(img_file)
         img = mmcv.imfrombytes(img_bytes)
 
