@@ -163,7 +163,7 @@ class Trainer:
             model = DDP(model, device_ids=[self.local_rank], broadcast_buffers=False)
 
         if self.use_model_ema:
-            self.ema_model = ModelEMA(model, 0.9998)
+            self.ema_model = ModelEMA(model, 0.9999)
             self.ema_model.updates = self.max_iter * self.start_epoch
 
         self.model = model

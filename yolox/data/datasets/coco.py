@@ -11,6 +11,7 @@ from pycocotools.coco import COCO
 
 from ..dataloading import get_yolox_datadir
 from .datasets_wrapper import Dataset
+import mmcv
 
 
 class COCODataset(Dataset):
@@ -54,6 +55,14 @@ class COCODataset(Dataset):
         self.annotations = self._load_coco_annotations()
         if cache:
             self._cache_images()
+
+        file_client_args = dict(
+            backend='petrel',
+            path_mapping=dict({
+                './datasets/': 's3://openmmlab/datasets/detection/',
+                'datasets/': 's3://openmmlab/datasets/detection/'
+            }))
+        self.file_client = mmcv.FileClient(**file_client_args)
 
     def __len__(self):
         return len(self.ids)
@@ -170,7 +179,10 @@ class COCODataset(Dataset):
 
         img_file = os.path.join(self.data_dir, self.name, file_name)
 
-        img = cv2.imread(img_file)
+        img_bytes = self.file_client.get(img_file)
+        img = mmcv.imfrombytes(img_bytes)
+
+        # img = cv2.imread(img_file)
         assert img is not None
 
         return img
